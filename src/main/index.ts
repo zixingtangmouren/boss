@@ -1,7 +1,6 @@
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { setup } from './setup';
-import { WINDOWS_NAME } from '../common/constants';
 
 app.whenReady().then(() => {
   // Set app user model id for windows
@@ -14,12 +13,5 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'));
-
-  const { windowsService } = setup();
-
-  ipcMain.on('open-chat-window', () => {
-    windowsService.openWindow(WINDOWS_NAME.CHAT_WINDOW);
-  });
+  setup();
 });

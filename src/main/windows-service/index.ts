@@ -41,6 +41,8 @@ export default class WindowsService {
 
   registerWindow(name: string, options: BrowserWindowConstructorOptions) {
     this.cacheWindows.set(name, { window: null, options });
+
+    // 注册窗口相关事件的
   }
 
   unregisterWindow(name: string) {

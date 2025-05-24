@@ -1,6 +1,7 @@
 import { ipcMain, MessageChannelMain, MessagePortMain, WebContents } from 'electron';
-import { IPC_EVENT } from './constants';
+import { IPC_MAIN_EVENT, IPC_EVENT } from './constants';
 import { BaseIpcService } from './base-ipc-service';
+import { IpcMessage } from './types';
 // import RenderIpcService from './render-ipc-service';
 
 /**
@@ -21,7 +22,7 @@ export class MainIpcService extends BaseIpcService {
   }
 
   private addRenderIpcServiceRegisterListener() {
-    ipcMain.handle(IPC_EVENT.RENDER_REGISTER, (event, data) => {
+    ipcMain.handle(IPC_MAIN_EVENT.RENDER_REGISTER, (event, data) => {
       if (this.ipcServicesMap.has(data.processKey)) {
         return {
           success: false,
@@ -31,9 +32,7 @@ export class MainIpcService extends BaseIpcService {
 
       const { port1, port2 } = new MessageChannelMain();
 
-      this.registerRenderIpcService(data.processKey, port1, event.sender);
-
-      this.triggerRegisterSuccess(event.sender, port2);
+      this.registerRenderIpcService(data.processKey, port1, port2, event.sender);
 
       this.sendRenderJoinMessage(data.processKey, event.sender);
 
@@ -43,35 +42,39 @@ export class MainIpcService extends BaseIpcService {
       };
     });
   }
-  // 注册渲染进程 IPC 服务
+
+  // 注册渲染进程 IPC 服务，监听消息事件
   private registerRenderIpcService(
     processKey: string,
-    port: MessagePortMain,
+    port1: MessagePortMain,
+    port2: MessagePortMain,
     webContents: WebContents
   ) {
     this.ipcServicesMap.set(processKey, {
-      port,
+      port: port1,
       processKey,
       webContents
     });
 
-    port.start();
-    port.on(IPC_EVENT.CHANNEL_MESSAGE, (event) => {
-      const { from, data, time } = event.data;
-
-      console.log('from >>>', from);
-      console.log('data >>>', data);
-      console.log('time >>>', time);
-
-      // TODO: 做实验
-      // this.postMessageToAll(data);
+    port1.start();
+    // 接受新渲染进程的消息
+    port1.on(IPC_EVENT.CHANNEL_MESSAGE, (event) => {
+      const data = event.data as IpcMessage;
+      this.triggerEvent(data.event, data);
     });
+
+    // 监听新渲染进程的注销
+    webContents.once('destroyed', () => {
+      this.sendRenderDestroyMessage(processKey);
+    });
+
+    this.sendRegisterSuccess(webContents, port2);
   }
 
-  // 触发渲染进程注册成功事件，将 port 传递给渲染进程
-  private triggerRegisterSuccess(sender: WebContents, port: MessagePortMain) {
+  // 通知新渲染进程注册成功，将 port 传递给新渲染进程
+  private sendRegisterSuccess(sender: WebContents, port: MessagePortMain) {
     sender.postMessage(
-      IPC_EVENT.RENDER_REGISTER_SUCCESS,
+      IPC_MAIN_EVENT.RENDER_REGISTER_SUCCESS,
       {
         processKey: this.processKey
       },
@@ -79,7 +82,7 @@ export class MainIpcService extends BaseIpcService {
     );
   }
 
-  // 发送渲染进程加入事件，通知其他渲染进程有新渲染进程加入
+  // 通知其他渲染进程有新渲染进程加入
   private sendRenderJoinMessage(processKey: string, newWebContents: WebContents) {
     this.ipcServicesMap.forEach((ipcService) => {
       if (ipcService.processKey === processKey) {
@@ -90,7 +93,7 @@ export class MainIpcService extends BaseIpcService {
       const { port1, port2 } = new MessageChannelMain();
 
       newWebContents.postMessage(
-        IPC_EVENT.RENDER_JOIN,
+        IPC_MAIN_EVENT.RENDER_JOIN,
         {
           processKey: ipcService.processKey
         },
@@ -98,12 +101,27 @@ export class MainIpcService extends BaseIpcService {
       );
 
       ipcService.webContents?.postMessage(
-        IPC_EVENT.RENDER_JOIN,
+        IPC_MAIN_EVENT.RENDER_JOIN,
         {
           processKey
         },
         [port2]
       );
     });
+  }
+
+  // 通知其他渲染进程，有渲染进程被销毁
+  private sendRenderDestroyMessage(processKey: string) {
+    this.ipcServicesMap.forEach((ipcService) => {
+      if (ipcService.processKey === processKey) {
+        return;
+      }
+
+      ipcService.webContents?.postMessage(IPC_MAIN_EVENT.RENDER_DESTROY, {
+        processKey
+      });
+    });
+
+    this.ipcServicesMap.delete(processKey);
   }
 }

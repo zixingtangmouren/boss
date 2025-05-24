@@ -1,12 +1,13 @@
 import Versions from './components/Versions';
 import electronLogo from './assets/electron.svg';
 import { useEffect } from 'react';
+import { WINDOWS_NAME } from '../../common/constants';
 
 function App(): React.JSX.Element {
   const ipcHandle = (): void => window.electron.ipcRenderer.send('ping');
 
   const openChatWindow = (): void => {
-    window.electron.ipcRenderer.send('open-chat-window');
+    window.api.openWindow(WINDOWS_NAME.CHAT_WINDOW);
   };
 
   useEffect(() => {
