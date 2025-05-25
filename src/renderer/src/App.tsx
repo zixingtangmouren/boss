@@ -1,18 +1,29 @@
 import Versions from './components/Versions';
 import electronLogo from './assets/electron.svg';
-import { useEffect } from 'react';
-import { WINDOWS_NAME } from '../../common/constants';
+import { PROCESSES_NAME } from '../../common/constants';
+import { useCounterStore } from './store/couterStore';
 
 function App(): React.JSX.Element {
   const ipcHandle = (): void => window.electron.ipcRenderer.send('ping');
 
   const openChatWindow = (): void => {
-    window.api.openWindow(WINDOWS_NAME.CHAT_WINDOW);
+    window.api.windowService.openWindow(PROCESSES_NAME.CHAT_WINDOW);
   };
 
-  useEffect(() => {
-    console.log('window.renderIpcService >>>', window.renderIpcService);
-  }, []);
+  const queryDatabase = async () => {
+    const res = await window.api.dbService.query('models', {
+      modelName: 'gpt-4o',
+      id: '09f8680c-e7e9-49e7-93d9-546ff1325791'
+    });
+    console.log('res >>>', res);
+  };
+
+  const getAllWindows = async (): Promise<void> => {
+    const res = await window.api.windowService.getAllWindows();
+    console.log('res >>>', res);
+  };
+
+  const { counter, increase, decrease } = useCounterStore();
 
   return (
     <>
@@ -41,6 +52,21 @@ function App(): React.JSX.Element {
             打开聊天
           </a>
         </div>
+        <div className="action">
+          <a target="_blank" rel="noreferrer" onClick={queryDatabase}>
+            查询数据库
+          </a>
+        </div>
+        <div className="action">
+          <a target="_blank" rel="noreferrer" onClick={getAllWindows}>
+            获取所有窗口
+          </a>
+        </div>
+      </div>
+      <div>
+        <button onClick={increase}>Increase</button>
+        <button onClick={decrease}>Decrease</button>
+        <p>Counter: {counter}</p>
       </div>
       <Versions></Versions>
     </>

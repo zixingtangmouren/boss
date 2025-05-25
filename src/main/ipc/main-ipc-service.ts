@@ -1,5 +1,5 @@
 import { ipcMain, MessageChannelMain, MessagePortMain, WebContents } from 'electron';
-import { IPC_MAIN_EVENT, IPC_EVENT } from './constants';
+import { IPC_MAIN_EVENT } from './constants';
 import { BaseIpcService } from './base-ipc-service';
 import { IpcMessage } from './types';
 // import RenderIpcService from './render-ipc-service';
@@ -58,9 +58,9 @@ export class MainIpcService extends BaseIpcService {
 
     port1.start();
     // 接受新渲染进程的消息
-    port1.on(IPC_EVENT.CHANNEL_MESSAGE, (event) => {
+    port1.on(IPC_MAIN_EVENT.CHANNEL_MESSAGE, (event) => {
       const data = event.data as IpcMessage;
-      this.triggerEvent(data.event, data);
+      this.triggerEvent(data.eventName, data);
     });
 
     // 监听新渲染进程的注销

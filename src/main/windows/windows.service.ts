@@ -1,12 +1,12 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions } from 'electron';
+import { BrowserWindowConstructorOptions } from 'electron';
 import BaseWindow from './base-window';
-import { WINDOWS_NAME } from '../../common/constants';
+import { WindowsServiceOptions } from './types';
 
 /**
  * 窗口服务
  *  - 注册窗口: 管理窗口配置
  */
-export default class WindowsService {
+export class WindowsService {
   private cacheWindows: Map<
     string,
     {
@@ -15,34 +15,18 @@ export default class WindowsService {
     }
   > = new Map();
 
-  constructor() {
-    this.init();
+  public defaultProcessKey: string;
+
+  constructor({ defaultProcessKey }: WindowsServiceOptions) {
+    this.defaultProcessKey = defaultProcessKey;
   }
 
-  private init() {
-    console.log('[WindowsService] init');
-    this.registerAppEvents();
-  }
-
-  // 注册 App 上跟窗口相关的全局事件
-  registerAppEvents() {
-    app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (BrowserWindow.getAllWindows().length === 0) this.openWindow(WINDOWS_NAME.MAIN_WINDOW);
-    });
-
-    app.on('window-all-closed', () => {
-      if (process.platform !== 'darwin') {
-        app.quit();
-      }
-    });
+  start() {
+    this.openWindow(this.defaultProcessKey);
   }
 
   registerWindow(name: string, options: BrowserWindowConstructorOptions) {
     this.cacheWindows.set(name, { window: null, options });
-
-    // 注册窗口相关事件的
   }
 
   unregisterWindow(name: string) {
@@ -107,5 +91,9 @@ export default class WindowsService {
     if (window) {
       window.close();
     }
+  }
+
+  getAllWindows() {
+    return Array.from(this.cacheWindows.keys());
   }
 }

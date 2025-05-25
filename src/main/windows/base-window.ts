@@ -15,6 +15,7 @@ export default class BaseWindow extends BrowserWindow {
         // nodeIntegration: true, // 通常需要同时启用 nodeIntegration
         sandbox: false,
         preload: join(__dirname, '../preload/index.js'),
+        additionalArguments: [`--processKey=${name}`],
         ...webPreferences
       }
     });

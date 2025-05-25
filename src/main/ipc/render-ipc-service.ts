@@ -28,7 +28,11 @@ export class RenderIpcService extends BaseIpcService {
       processKey: this.processKey
     });
 
-    console.log('result >>>', result);
+    if (result.success) {
+      console.log(`[${this.processKey} RenderIpcService] register success`);
+    } else {
+      console.log(`[${this.processKey} RenderIpcService] register failed`, result.message);
+    }
   }
 
   // 添加渲染进程的相关事件监听
@@ -61,7 +65,7 @@ export class RenderIpcService extends BaseIpcService {
     // 监听其他进程的消息（会有主进程、渲染进程）
     port.onmessage = (event) => {
       const data = event.data as IpcMessage;
-      this.triggerEvent(data.event, data);
+      this.triggerEvent(data.eventName, data);
     };
   }
 }

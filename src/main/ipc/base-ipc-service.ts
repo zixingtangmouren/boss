@@ -1,5 +1,5 @@
 import { MessagePortMain, WebContents } from 'electron';
-import { IpcMessage, PostMessageParams, PostMessageToAllParams } from './types';
+import { IpcMessage } from './types';
 
 export class BaseIpcService {
   protected processKey: string;
@@ -15,26 +15,24 @@ export class BaseIpcService {
     this.ipcServicesMap = new Map();
   }
 
-  public postMessage(params: PostMessageParams) {
-    const { processKey, event, data } = params;
+  public postMessage(processKey: string, eventName: string, data?: unknown) {
     const ipcService = this.ipcServicesMap.get(processKey);
     if (ipcService) {
       ipcService.port.postMessage({
-        event,
+        eventName,
         from: this.processKey,
-        data,
+        data: data || '',
         time: Date.now()
       });
     }
   }
 
-  public postMessageToAll(params: PostMessageToAllParams) {
-    const { event, data } = params;
+  public postMessageToAll(eventName: string, data?: unknown) {
     this.ipcServicesMap.forEach((ipcService) => {
       ipcService.port.postMessage({
-        event,
+        eventName,
         from: this.processKey,
-        data,
+        data: data || '',
         time: Date.now()
       });
     });
@@ -44,7 +42,16 @@ export class BaseIpcService {
     return Array.from(this.ipcServicesMap.keys());
   }
 
-  public addEventListener(event: string, callback: (data: IpcMessage) => void) {
+  public addEventListener(
+    event: string,
+    callback: (data: IpcMessage) => void,
+    options: AddEventListenerOptions = {}
+  ) {
+    const { once } = options;
+    if (once) {
+      // @ts-ignore (define in dts)
+      callback._once = true;
+    }
     const callbacks = this.callbackMap.get(event) || [];
     callbacks.push(callback);
     this.callbackMap.set(event, callbacks);
@@ -63,6 +70,10 @@ export class BaseIpcService {
     callbacks.forEach((callback) => {
       callback(data);
     });
+
+    if (callbacks.some((callback) => (callback as any)._once)) {
+      this.removeEventListener(event, callbacks[0] as (data: IpcMessage) => void);
+    }
   }
 
   public removeAllEventListeners(event: string) {
