@@ -35,48 +35,50 @@ export class TableManager<T extends Entity> {
     try {
       await fs.writeFile(this.jsonPath, JSON.stringify(newTableData));
       this.tableData = newTableData;
+      return newData;
     } catch (error) {
       console.error('insert error >>>', error);
+      return null;
     }
   }
 
-  async remove(where: Partial<T>, callback?: (item: T) => void) {
+  async remove(where: Partial<T>) {
     const whereKeys = Object.keys(where);
     const newTableData = this.tableData.filter((item) => {
+      return whereKeys.every((key) => item[key] === where[key]);
+    });
+
+    const removedData = this.tableData.find((item) => {
       return whereKeys.every((key) => item[key] === where[key]);
     });
 
     try {
       await fs.writeFile(this.jsonPath, JSON.stringify(newTableData));
       this.tableData = newTableData;
+      return removedData;
     } catch (error) {
       console.error('remove error >>>', error);
-    } finally {
-      if (callback) {
-        this.tableData.forEach((item) => {
-          callback(item);
-        });
-      }
+      return null;
     }
   }
 
-  async update(where: Partial<T>, data: Partial<T>, callback?: (item: T) => void) {
+  async update(where: Partial<T>, data: Partial<T>) {
     const whereKeys = Object.keys(where);
     const newTableData = this.tableData.map((item) => {
       return whereKeys.every((key) => item[key] === where[key]) ? { ...item, ...data } : item;
     });
 
+    const updatedData = newTableData.find((item) => {
+      return whereKeys.every((key) => item[key] === where[key]);
+    });
+
     try {
       await fs.writeFile(this.jsonPath, JSON.stringify(newTableData));
       this.tableData = newTableData;
+      return updatedData;
     } catch (error) {
       console.error('update error >>>', error);
-    } finally {
-      if (callback) {
-        this.tableData.forEach((item) => {
-          callback(item);
-        });
-      }
+      return null;
     }
   }
 
@@ -85,5 +87,9 @@ export class TableManager<T extends Entity> {
     return this.tableData.filter((item) => {
       return whereKeys.every((key) => item[key] === where[key]);
     });
+  }
+
+  async findAll() {
+    return this.tableData;
   }
 }

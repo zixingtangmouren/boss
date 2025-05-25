@@ -2,7 +2,12 @@ import { contextBridge } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 import { RenderIpcService } from '../main/ipc/render-ipc-service';
 import { WINDOWS_SERVICE_EVENT } from '../main/windows/events';
-import { DB_SERVICE_EVENT } from '../main/database/events';
+import { DATABASE_EVENT } from '../main/database/events';
+import { MODELS_EVENT } from '../main/models/events';
+import { CreateModelDto } from '../main/models/dto/create-model.dto';
+import { CreateAgentDto } from '../main/agents/dto/create-agent.dto';
+import { AGENTS_EVENT } from '../main/agents/events';
+import { UpdateAgentDto } from '../main/agents/dto/update-agent.dto';
 
 interface InvokeOptions {
   eventName: string;
@@ -80,7 +85,7 @@ const ipcService = {
 const dbService = {
   query: (table: string, where: unknown) => {
     return invoke({
-      eventName: DB_SERVICE_EVENT.QUERY,
+      eventName: DATABASE_EVENT.QUERY,
       data: {
         table,
         where
@@ -92,11 +97,51 @@ const dbService = {
   }
 };
 
+const modelsService = {
+  createModel: (data: CreateModelDto) => {
+    return invoke({
+      eventName: MODELS_EVENT.CREATE_MODEL,
+      data
+    });
+  }
+};
+
+const agentsService = {
+  createAgent: (data: CreateAgentDto) => {
+    return invoke({
+      eventName: AGENTS_EVENT.CREATE_AGENT,
+      data
+    });
+  },
+  deleteAgent: (id: string) => {
+    return invoke({
+      eventName: AGENTS_EVENT.DELETE_AGENT,
+      data: id
+    });
+  },
+  updateAgent: (data: UpdateAgentDto) => {
+    return invoke({
+      eventName: AGENTS_EVENT.UPDATE_AGENT,
+      data
+    });
+  },
+  getAgents: () => {
+    return invoke({
+      eventName: AGENTS_EVENT.GET_AGENTS,
+      options: {
+        result: true
+      }
+    });
+  }
+};
+
 // Custom APIs for renderer
 const api = {
   windowService,
   ipcService,
-  dbService
+  dbService,
+  modelsService,
+  agentsService
 };
 
 export type Api = typeof api;

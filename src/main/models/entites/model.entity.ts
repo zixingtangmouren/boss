@@ -1,4 +1,4 @@
-import { Entity } from '../types';
+import { Entity } from '../../database/types';
 
 export class ModelEntity extends Entity {
   modelName: string;

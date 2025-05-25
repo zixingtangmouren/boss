@@ -1,6 +1,6 @@
-export enum DB_SERVICE_EVENT {
-  QUERY = 'db-service-query',
-  INSERT = 'db-service-insert',
-  UPDATE = 'db-service-update',
-  DELETE = 'db-service-delete'
+export enum DATABASE_EVENT {
+  QUERY = 'database/query',
+  INSERT = 'database/insert',
+  UPDATE = 'database/update',
+  DELETE = 'database/delete'
 }

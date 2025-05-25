@@ -1,11 +1,8 @@
 import Versions from './components/Versions';
 import electronLogo from './assets/electron.svg';
 import { PROCESSES_NAME } from '../../common/constants';
-import { useCounterStore } from './store/couterStore';
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping');
-
   const openChatWindow = (): void => {
     window.api.windowService.openWindow(PROCESSES_NAME.CHAT_WINDOW);
   };
@@ -22,8 +19,6 @@ function App(): React.JSX.Element {
     const res = await window.api.windowService.getAllWindows();
     console.log('res >>>', res);
   };
-
-  const { counter, increase, decrease } = useCounterStore();
 
   return (
     <>
@@ -42,11 +37,7 @@ function App(): React.JSX.Element {
             Documentation
           </a>
         </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
+
         <div className="action">
           <a target="_blank" rel="noreferrer" onClick={openChatWindow}>
             打开聊天
@@ -63,11 +54,7 @@ function App(): React.JSX.Element {
           </a>
         </div>
       </div>
-      <div>
-        <button onClick={increase}>Increase</button>
-        <button onClick={decrease}>Decrease</button>
-        <p>Counter: {counter}</p>
-      </div>
+
       <Versions></Versions>
     </>
   );

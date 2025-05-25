@@ -8,7 +8,7 @@ import { Entity } from './types';
  * 本地数据库服务
  * 主要负责数据表的创建、删除、获取、列表获取
  */
-export class DbService {
+export class DatabaseService {
   private dbPath: string;
   private tables: Record<string, TableManager<Entity>> = {};
 
@@ -25,24 +25,24 @@ export class DbService {
   }
 
   async init() {
-    if (!(await DbService.checkTableExists(this.dbPath))) {
+    if (!(await DatabaseService.checkTableExists(this.dbPath))) {
       await fs.mkdir(this.dbPath, { recursive: true });
     }
 
-    console.log('[DbService] init >>>', this.dbPath);
+    console.log('[DatabaseService] init >>>', this.dbPath);
   }
 
   async createTable(name: string) {
     // 创建表
     const tablePath = path.join(this.dbPath, `${name}.json`);
-    if (!(await DbService.checkTableExists(tablePath))) {
+    if (!(await DatabaseService.checkTableExists(tablePath))) {
       await fs.writeFile(tablePath, '[]');
     }
   }
 
   async removeTable(name: string) {
     const tablePath = path.join(this.dbPath, `${name}.json`);
-    if (!(await DbService.checkTableExists(tablePath))) {
+    if (!(await DatabaseService.checkTableExists(tablePath))) {
       return;
     }
 
