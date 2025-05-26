@@ -4,6 +4,7 @@ import { DatabaseModule } from './database/database.module';
 import { ModelsModule } from './models/models.module';
 import { AgentsModule } from './agents/agents.module';
 import { ChatModule } from './chat/chat.module';
+import { MemonyModule } from './memony/memony.module';
 
 export async function setup() {
   const start = Date.now();
@@ -26,11 +27,16 @@ export async function setup() {
   const agentsModule = new AgentsModule(mainIpcService, databaseModule.databaseService);
   agentsModule.init();
 
+  // 注册记忆服务
+  const memonyModule = new MemonyModule(mainIpcService, databaseModule.databaseService);
+  memonyModule.init();
+
   // 注册 chat 服务
   const chatModule = new ChatModule(
     mainIpcService,
     agentsModule.agentsService,
-    modelsModule.modelsService
+    modelsModule.modelsService,
+    memonyModule.memonyService
   );
   chatModule.init();
 

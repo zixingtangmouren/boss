@@ -9,8 +9,6 @@ export default class BaseWindow extends BrowserWindow {
     super({
       show: false,
       autoHideMenuBar: true,
-      titleBarStyle: 'hidden',
-      frame: false,
       ...options,
       webPreferences: {
         // contextIsolation: false, // 禁用上下文隔离

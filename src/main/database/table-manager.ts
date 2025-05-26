@@ -1,6 +1,8 @@
 import fs from 'fs/promises';
 import { Entity } from './types';
 import { v4 as uuid } from 'uuid';
+
+// TODO: 需要优化，不要每次操作都读写文件，可以先写到内存中，最后批次处理写入文件中
 export class TableManager<T extends Entity> {
   private jsonPath: string;
   private tableData: T[] = [];

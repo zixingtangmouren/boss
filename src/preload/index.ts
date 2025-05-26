@@ -10,6 +10,7 @@ import { AGENTS_EVENT } from '../main/agents/events';
 import { UpdateAgentDto } from '../main/agents/dto/update-agent.dto';
 import { ChatDto } from '../main/chat/dto/chat.dto';
 import { CHAT_EVENT } from '../main/chat/events';
+import { MEMORY_EVENT } from '../main/memony/events';
 
 interface InvokeOptions {
   eventName: string;
@@ -148,12 +149,14 @@ const agentsService = {
 const chatService = {
   startSendMessage: (
     data: ChatDto,
+    onStart: () => void,
     onMessage: (chunk: { data: string }) => void,
     onStop: (params: { success: boolean; message: string }) => void
   ) => {
     const onMessageHandler = (event) => {
       onMessage(event.data as { data: string });
     };
+    onStart();
     renderIpcService.addEventListener(CHAT_EVENT.SENDING_MESSAGE, onMessageHandler);
     renderIpcService.addEventListener(
       CHAT_EVENT.STOP_SEND_MESSAGE,
@@ -169,6 +172,18 @@ const chatService = {
   }
 };
 
+const memonyService = {
+  getMemoryList: (agentId: string) => {
+    return invoke({
+      eventName: MEMORY_EVENT.GET_MEMORY_LIST,
+      data: { agentId },
+      options: {
+        result: true
+      }
+    });
+  }
+};
+
 // Custom APIs for renderer
 const api = {
   windowService,
@@ -176,7 +191,8 @@ const api = {
   dbService,
   modelsService,
   agentsService,
-  chatService
+  chatService,
+  memonyService
 };
 
 export type Api = typeof api;
