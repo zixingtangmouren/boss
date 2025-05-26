@@ -1,4 +1,3 @@
-import { MainIpcService } from '../ipc';
 import { DatabaseService } from '../database/database.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { TableManager } from '../database/table-manager';
@@ -6,11 +5,11 @@ import { AgentEntity } from './entites/agent.entity';
 import { UpdateAgentDto } from './dto/update-agent.dto';
 
 export class AgentsService {
-  private mainIpcService: MainIpcService;
   private databaseService: DatabaseService;
   private table: TableManager<AgentEntity>;
-  constructor(mainIpcService: MainIpcService, databaseService: DatabaseService) {
-    this.mainIpcService = mainIpcService;
+  private agents: AgentEntity[] = [];
+
+  constructor(databaseService: DatabaseService) {
     this.databaseService = databaseService;
     this.init();
   }
@@ -21,18 +20,29 @@ export class AgentsService {
   }
 
   async createAgent(data: CreateAgentDto) {
-    return await this.table.insert(data);
+    const agent = (await this.table.insert(data)) as AgentEntity;
+    this.agents.push(agent);
+    return agent;
   }
 
   async deleteAgent(id: string) {
-    return await this.table.remove({ id });
+    await this.table.remove({ id });
+    this.agents = this.agents.filter((agent) => agent.id !== id);
+    return id;
   }
 
   async updateAgent(where: Partial<AgentEntity>, data: UpdateAgentDto) {
-    return await this.table.update(where, data);
+    const agent = (await this.table.update(where, data)) as AgentEntity;
+    this.agents = this.agents.map((agent) => (agent.id === agent.id ? agent : agent));
+    return agent;
   }
 
   async getAgents() {
-    return await this.table.findAll();
+    this.agents = await this.table.findAll();
+    return this.agents;
+  }
+
+  async getAgent(id: string) {
+    return this.agents.find((agent) => agent.id === id);
   }
 }

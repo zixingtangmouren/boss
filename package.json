@@ -23,7 +23,13 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
+    "@langchain/community": "^0.3.44",
+    "@langchain/core": "^0.3.57",
+    "@langchain/openai": "^0.5.11",
+    "ahooks": "^3.8.5",
+    "antd": "^5.25.2",
     "electron-updater": "^6.3.9",
+    "langchain": "^0.3.27",
     "uuid": "^11.1.0",
     "zustand": "^5.0.5"
   },
@@ -42,9 +48,10 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "less": "^4.3.0",
     "prettier": "^3.5.3",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "typescript": "^5.8.3",
     "vite": "^6.2.6"
   },

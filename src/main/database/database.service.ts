@@ -68,7 +68,7 @@ export class DatabaseService {
       throw new Error('table not exists');
     }
 
-    const tableManager = new TableManager<T>(name);
+    const tableManager = new TableManager<T>(tablePath);
     this.tables[name] = tableManager;
     await tableManager.init();
     return tableManager;

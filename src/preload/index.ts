@@ -8,6 +8,8 @@ import { CreateModelDto } from '../main/models/dto/create-model.dto';
 import { CreateAgentDto } from '../main/agents/dto/create-agent.dto';
 import { AGENTS_EVENT } from '../main/agents/events';
 import { UpdateAgentDto } from '../main/agents/dto/update-agent.dto';
+import { ChatDto } from '../main/chat/dto/chat.dto';
+import { CHAT_EVENT } from '../main/chat/events';
 
 interface InvokeOptions {
   eventName: string;
@@ -103,6 +105,14 @@ const modelsService = {
       eventName: MODELS_EVENT.CREATE_MODEL,
       data
     });
+  },
+  getModels: () => {
+    return invoke({
+      eventName: MODELS_EVENT.GET_MODELS,
+      options: {
+        result: true
+      }
+    });
   }
 };
 
@@ -135,13 +145,38 @@ const agentsService = {
   }
 };
 
+const chatService = {
+  startSendMessage: (
+    data: ChatDto,
+    onMessage: (chunk: { data: string }) => void,
+    onStop: (params: { success: boolean; message: string }) => void
+  ) => {
+    const onMessageHandler = (event) => {
+      onMessage(event.data as { data: string });
+    };
+    renderIpcService.addEventListener(CHAT_EVENT.SENDING_MESSAGE, onMessageHandler);
+    renderIpcService.addEventListener(
+      CHAT_EVENT.STOP_SEND_MESSAGE,
+      (event) => {
+        onStop(event.data as { success: boolean; message: string });
+        renderIpcService.removeEventListener(CHAT_EVENT.SENDING_MESSAGE, onMessageHandler);
+      },
+      {
+        once: true
+      }
+    );
+    renderIpcService.postMessage('main', CHAT_EVENT.START_SEND_MESSAGE, data);
+  }
+};
+
 // Custom APIs for renderer
 const api = {
   windowService,
   ipcService,
   dbService,
   modelsService,
-  agentsService
+  agentsService,
+  chatService
 };
 
 export type Api = typeof api;

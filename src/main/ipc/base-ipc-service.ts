@@ -24,6 +24,13 @@ export class BaseIpcService {
         data: data || '',
         time: Date.now()
       });
+
+      console.log('postMessage >>>', {
+        eventName,
+        from: this.processKey,
+        data: data || '',
+        time: Date.now()
+      });
     }
   }
 

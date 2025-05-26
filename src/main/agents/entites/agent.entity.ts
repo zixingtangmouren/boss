@@ -5,4 +5,5 @@ export interface AgentEntity extends Entity {
   description: string;
   prompt: string;
   icon: string;
+  modelId: string;
 }

@@ -4,13 +4,11 @@ import { AgentsController } from './agents.controller';
 import { DatabaseService } from '../database/database.service';
 
 export class AgentsModule {
-  private mainIpcService: MainIpcService;
-  private agentsService: AgentsService;
+  public agentsService: AgentsService;
   private agentsController: AgentsController;
 
   constructor(mainIpcService: MainIpcService, databaseService: DatabaseService) {
-    this.mainIpcService = mainIpcService;
-    this.agentsService = new AgentsService(mainIpcService, databaseService);
+    this.agentsService = new AgentsService(databaseService);
     this.agentsController = new AgentsController(mainIpcService, this.agentsService);
   }
 

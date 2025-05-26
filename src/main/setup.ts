@@ -3,6 +3,7 @@ import { MainIpcService } from './ipc';
 import { DatabaseModule } from './database/database.module';
 import { ModelsModule } from './models/models.module';
 import { AgentsModule } from './agents/agents.module';
+import { ChatModule } from './chat/chat.module';
 
 export async function setup() {
   const start = Date.now();
@@ -24,6 +25,14 @@ export async function setup() {
   // 注册 agents 服务
   const agentsModule = new AgentsModule(mainIpcService, databaseModule.databaseService);
   agentsModule.init();
+
+  // 注册 chat 服务
+  const chatModule = new ChatModule(
+    mainIpcService,
+    agentsModule.agentsService,
+    modelsModule.modelsService
+  );
+  chatModule.init();
 
   console.log(`setup time: ${Date.now() - start}ms`);
 
