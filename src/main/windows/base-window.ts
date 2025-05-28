@@ -26,7 +26,7 @@ export default class BaseWindow extends BrowserWindow {
   }
 
   private init() {
-    console.log(`初始化窗口 >>> ${this.name}`);
+    console.log(` 初始化窗口 >>> ${this.name}`);
 
     // 拦截窗口中所有通过 window.open 或类似方式尝试新开窗口的行为，并用系统默认浏览器打开链接，而不是在 Electron 应用内新开窗口。
     this.webContents.setWindowOpenHandler((details) => {

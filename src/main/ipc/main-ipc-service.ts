@@ -11,8 +11,8 @@ import { IpcMessage } from './types';
  *  - 中转事件到其他渲染进程
  */
 export class MainIpcService extends BaseIpcService {
-  constructor(processKey: string) {
-    super(processKey);
+  constructor(processKey: string, debug = false) {
+    super(processKey, debug);
     this.init();
   }
 

@@ -26,5 +26,7 @@ export class WindowsModule {
     this.windowsController.registerEvents();
 
     this.windowsService.start();
+
+    console.log('[WindowsModule] init');
   }
 }

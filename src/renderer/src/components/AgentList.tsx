@@ -2,6 +2,7 @@ import { Layout, Space, Button, List, Spin, Modal, Form, Input, Typography, Sele
 import { useAgents } from '@renderer/hooks/useAgents';
 import { useState } from 'react';
 import { useModels } from '@renderer/hooks/useModels';
+import { useMcpServicesStore } from '@renderer/store/useMcpServicesStore';
 
 const { Sider } = Layout;
 
@@ -17,7 +18,7 @@ function AgentList() {
   } = useAgents();
 
   const { models, createModel, createLoading: creatingModel } = useModels();
-
+  const { mcpServices } = useMcpServicesStore();
   const [form] = Form.useForm();
   const [modelForm] = Form.useForm();
 
@@ -32,7 +33,8 @@ function AgentList() {
       description: values.description,
       prompt: values.prompt,
       icon: values.icon || '🤖',
-      modelId: values.modelId
+      modelId: values.modelId,
+      mcpServerIds: values.mcpServerIds || []
     });
     setShowForm(false);
     form.resetFields();
@@ -215,6 +217,15 @@ function AgentList() {
           <Form.Item name="modelId" label="模型">
             <Select
               options={models.map((model) => ({ label: model.modelName, value: model.id }))}
+            />
+          </Form.Item>
+          <Form.Item name="mcpServerIds" label="MCP 服务">
+            <Select
+              options={mcpServices.map((mcpServer) => ({
+                label: mcpServer.mcpServerName,
+                value: mcpServer.mcpServerId
+              }))}
+              mode="multiple"
             />
           </Form.Item>
         </Form>

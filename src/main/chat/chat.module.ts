@@ -4,6 +4,7 @@ import { ChatController } from './chat.controller';
 import { AgentsService } from '../agents/agents.service';
 import { ModelsService } from '../models/models.service';
 import { MemonyService } from '../memony/memony.service';
+import { McpService } from '../mcp/mcp.service';
 
 export class ChatModule {
   private chatService: ChatService;
@@ -14,9 +15,10 @@ export class ChatModule {
     mainIpcService: MainIpcService,
     agentsService: AgentsService,
     modelsService: ModelsService,
-    memonyService: MemonyService
+    memonyService: MemonyService,
+    mcpService: McpService
   ) {
-    this.chatService = new ChatService(agentsService, modelsService, memonyService);
+    this.chatService = new ChatService(agentsService, modelsService, memonyService, mcpService);
     this.chatController = new ChatController(mainIpcService, this.chatService, memonyService);
   }
 

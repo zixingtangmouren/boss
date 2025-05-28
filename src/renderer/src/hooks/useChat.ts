@@ -42,7 +42,8 @@ export const useChat = (currentAgent: AgentEntity | null) => {
       },
       (chunk) => {
         console.log(chunk.data);
-        content += chunk.data;
+        // @ts-ignore(langchain/core/messages/ai.ts)
+        content += chunk.data?.output || chunk.data;
         setChatMessages((prev) => {
           const orgMsg = prev.slice(0, -1);
           const aiMsg: ChatMessage = prev[prev.length - 1];

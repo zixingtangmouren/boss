@@ -5,6 +5,7 @@ import { ModelsModule } from './models/models.module';
 import { AgentsModule } from './agents/agents.module';
 import { ChatModule } from './chat/chat.module';
 import { MemonyModule } from './memony/memony.module';
+import { McpModule } from './mcp/mcp.module';
 
 export async function setup() {
   const start = Date.now();
@@ -31,12 +32,17 @@ export async function setup() {
   const memonyModule = new MemonyModule(mainIpcService, databaseModule.databaseService);
   memonyModule.init();
 
+  // 注册 mcp 服务
+  const mcpModule = new McpModule(databaseModule.databaseService, mainIpcService);
+  mcpModule.init();
+
   // 注册 chat 服务
   const chatModule = new ChatModule(
     mainIpcService,
     agentsModule.agentsService,
     modelsModule.modelsService,
-    memonyModule.memonyService
+    memonyModule.memonyService,
+    mcpModule.mcpService
   );
   chatModule.init();
 

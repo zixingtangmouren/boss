@@ -6,4 +6,5 @@ export interface AgentEntity extends Entity {
   prompt: string;
   icon: string;
   modelId: string;
+  mcpServerIds: string[];
 }

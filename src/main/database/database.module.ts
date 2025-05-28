@@ -11,7 +11,6 @@ export class DatabaseModule {
   }
 
   async init() {
-    await this.databaseService.init();
     this.databaseController.registerEvents();
   }
 }

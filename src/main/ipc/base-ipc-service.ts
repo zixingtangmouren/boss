@@ -3,6 +3,7 @@ import { IpcMessage } from './types';
 
 export class BaseIpcService {
   protected processKey: string;
+  private debug = false;
   protected ipcServicesMap: Map<
     string,
     { port: MessagePort | MessagePortMain; processKey: string; webContents: WebContents | null }
@@ -10,9 +11,10 @@ export class BaseIpcService {
 
   protected callbackMap: Map<string, ((data: IpcMessage) => void)[]> = new Map();
 
-  constructor(processKey: string) {
+  constructor(processKey: string, debug = false) {
     this.processKey = processKey;
     this.ipcServicesMap = new Map();
+    this.debug = debug;
   }
 
   public postMessage(processKey: string, eventName: string, data?: unknown) {
@@ -25,12 +27,14 @@ export class BaseIpcService {
         time: Date.now()
       });
 
-      console.log('postMessage >>>', {
-        eventName,
-        from: this.processKey,
-        data: data || '',
-        time: Date.now()
-      });
+      if (this.debug) {
+        console.log('postMessage >>>', {
+          eventName,
+          from: this.processKey,
+          data: data || '',
+          time: Date.now()
+        });
+      }
     }
   }
 
@@ -43,6 +47,15 @@ export class BaseIpcService {
         time: Date.now()
       });
     });
+
+    if (this.debug) {
+      console.log('postMessageToAll >>>', {
+        eventName,
+        from: this.processKey,
+        data: data || '',
+        time: Date.now()
+      });
+    }
   }
 
   public getAllProcessKeys() {

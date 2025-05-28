@@ -1,7 +1,9 @@
-import { Button, Input, Layout, Divider, Modal } from 'antd';
+import { Button, Input, Layout, Divider, Modal, Card } from 'antd';
 import { useChat } from '@renderer/hooks/useChat';
 import { useAgentsStore } from '@renderer/store/useAgentsStore';
 import { useEffect, useRef, useState } from 'react';
+import { useMcpService } from '@renderer/hooks/useMcpService';
+import { UsbOutlined } from '@ant-design/icons';
 
 const { Content } = Layout;
 
@@ -13,8 +15,26 @@ export const MessageWindow = () => {
   const { chatMessages, chatInput, handleSendMessage, handleMessageChange } =
     useChat(selectedAgent);
 
+  const { mcpServices, listLoading, registerMcpServer } = useMcpService();
+
   // 新增：控制 Modal 显隐
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
+
+  // 新增：控制 Mcp 服务 Modal 显隐
+  const [isMcpModalOpen, setIsMcpModalOpen] = useState(false);
+
+  // 新增：添加 MCP 服务 Modal 显隐
+  const [isAddMcpModalOpen, setIsAddMcpModalOpen] = useState(false);
+
+  // 新增：表单数据
+  const [addMcpForm, setAddMcpForm] = useState({
+    mcpServerName: '',
+    command: '',
+    serverScriptPath: ''
+  });
+
+  // 新增：表单 loading
+  const [addMcpLoading, setAddMcpLoading] = useState(false);
 
   // 点击 agent 名称时弹窗
   const handleAgentNameClick = () => {
@@ -24,6 +44,45 @@ export const MessageWindow = () => {
   // 关闭弹窗
   const handleModalClose = () => {
     setIsAgentModalOpen(false);
+  };
+
+  // 新增：点击 Usb 图标时弹窗
+  const handleUsbIconClick = () => {
+    setIsMcpModalOpen(true);
+  };
+
+  // 新增：关闭 Mcp 服务弹窗
+  const handleMcpModalClose = () => {
+    setIsMcpModalOpen(false);
+  };
+
+  // 打开添加 MCP 服务弹窗
+  const handleAddMcpClick = () => {
+    setIsAddMcpModalOpen(true);
+  };
+
+  // 关闭添加 MCP 服务弹窗
+  const handleAddMcpModalClose = () => {
+    setIsAddMcpModalOpen(false);
+    setAddMcpForm({ mcpServerName: '', command: '', serverScriptPath: '' });
+  };
+
+  // 表单输入变更
+  const handleAddMcpFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddMcpForm({ ...addMcpForm, [e.target.name]: e.target.value });
+  };
+
+  // 提交表单
+  const handleAddMcpSubmit = async () => {
+    if (!addMcpForm.mcpServerName || !addMcpForm.command || !addMcpForm.serverScriptPath) return;
+    setAddMcpLoading(true);
+    await registerMcpServer(
+      addMcpForm.mcpServerName,
+      addMcpForm.command,
+      addMcpForm.serverScriptPath
+    );
+    setAddMcpLoading(false);
+    handleAddMcpModalClose();
   };
 
   useEffect(() => {
@@ -48,9 +107,15 @@ export const MessageWindow = () => {
       >
         <div style={{ fontWeight: 500, fontSize: 18, marginBottom: 16, color: '#222' }}>
           {selectedAgent ? (
-            <span style={{ cursor: 'pointer' }} onClick={handleAgentNameClick}>
-              {selectedAgent.icon || '🤖'} {selectedAgent.name}
-            </span>
+            <div>
+              <span style={{ cursor: 'pointer' }} onClick={handleAgentNameClick}>
+                {selectedAgent.icon || '🤖'} {selectedAgent.name}
+              </span>
+              <UsbOutlined
+                style={{ marginLeft: 8, cursor: 'pointer' }}
+                onClick={handleUsbIconClick}
+              />
+            </div>
           ) : (
             <span>请选择一个智能体开始聊天</span>
           )}
@@ -156,6 +221,84 @@ export const MessageWindow = () => {
             {/* 可根据实际 agent 字段补充更多信息 */}
           </div>
         ) : null}
+      </Modal>
+
+      {/* MCP 服务状态 Modal */}
+      <Modal
+        title="MCP 服务状态"
+        open={isMcpModalOpen}
+        onCancel={handleMcpModalClose}
+        footer={null}
+      >
+        {listLoading ? (
+          <div>加载中...</div>
+        ) : (
+          <div>
+            {mcpServices && mcpServices.length > 0 ? (
+              <Card title="已注册 MCP 服务列表" style={{ marginBottom: 16 }}>
+                <ul style={{ paddingLeft: 0 }}>
+                  {mcpServices.map((item) => (
+                    <li key={item.mcpServerName} style={{ marginBottom: 8, listStyle: 'none' }}>
+                      <b>{item.mcpServerName}</b>：
+                      <span style={{ color: item.status === 'connected' ? 'green' : 'red' }}>
+                        {item.status === 'connected' ? '已连接' : '未连接'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            ) : (
+              <div>
+                <div>暂无 MCP 服务</div>
+              </div>
+            )}
+          </div>
+        )}
+        <Button size="small" onClick={handleAddMcpClick}>
+          添加 MCP 服务
+        </Button>
+      </Modal>
+
+      {/* 添加 MCP 服务 Modal */}
+      <Modal
+        title="添加 MCP 服务"
+        open={isAddMcpModalOpen}
+        onCancel={handleAddMcpModalClose}
+        onOk={handleAddMcpSubmit}
+        confirmLoading={addMcpLoading}
+        okText="提交"
+        cancelText="取消"
+        destroyOnClose
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <b>MCP 服务名称：</b>
+            <Input
+              name="mcpServerName"
+              value={addMcpForm.mcpServerName}
+              onChange={handleAddMcpFormChange}
+              placeholder="请输入 MCP 服务名称"
+            />
+          </div>
+          <div>
+            <b>Command：</b>
+            <Input
+              name="command"
+              value={addMcpForm.command}
+              onChange={handleAddMcpFormChange}
+              placeholder="请输入启动命令"
+            />
+          </div>
+          <div>
+            <b>Server Script 路径：</b>
+            <Input
+              name="serverScriptPath"
+              value={addMcpForm.serverScriptPath}
+              onChange={handleAddMcpFormChange}
+              placeholder="请输入 server script 路径"
+            />
+          </div>
+        </div>
       </Modal>
     </Content>
   );

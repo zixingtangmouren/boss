@@ -11,6 +11,9 @@ import { UpdateAgentDto } from '../main/agents/dto/update-agent.dto';
 import { ChatDto } from '../main/chat/dto/chat.dto';
 import { CHAT_EVENT } from '../main/chat/events';
 import { MEMORY_EVENT } from '../main/memony/events';
+import { RegisterMcpServerDto } from '../main/mcp/dto/register-mcp-server.dto';
+import { MCP_EVENT } from '../main/mcp/events';
+import { IpcMessage } from '../main/ipc/types';
 
 interface InvokeOptions {
   eventName: string;
@@ -21,18 +24,22 @@ interface InvokeOptions {
   };
 }
 
-const invoke = ({
+const invoke = <T = unknown>({
   eventName,
   data,
   options = { processKey: 'main', result: false }
 }: InvokeOptions) => {
-  return new Promise((resolve) => {
+  return new Promise<IpcMessage<T>>((resolve) => {
     if (options.result) {
       renderIpcService.addEventListener(eventName, (event) => {
-        resolve(event);
+        resolve(event as IpcMessage<T>);
       });
     } else {
-      resolve(null);
+      resolve({
+        from: 'main',
+        eventName,
+        data: null as T
+      } as IpcMessage<T>);
     }
     renderIpcService.postMessage(options.processKey || 'main', eventName, data);
   });
@@ -184,6 +191,24 @@ const memonyService = {
   }
 };
 
+const mcpService = {
+  registerMcpServer: (data: RegisterMcpServerDto) => {
+    return invoke({
+      eventName: MCP_EVENT.REGISTER_MCP_SERVER,
+      data,
+      options: {
+        result: true
+      }
+    });
+  },
+  getMcpServerList: () => {
+    return invoke({
+      eventName: MCP_EVENT.GET_MCP_SERVER_LIST,
+      options: { result: true }
+    });
+  }
+};
+
 // Custom APIs for renderer
 const api = {
   windowService,
@@ -192,7 +217,8 @@ const api = {
   modelsService,
   agentsService,
   chatService,
-  memonyService
+  memonyService,
+  mcpService
 };
 
 export type Api = typeof api;

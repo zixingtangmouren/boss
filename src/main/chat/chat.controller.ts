@@ -38,7 +38,6 @@ export class ChatController {
             });
             break;
           }
-          console.log('sending message >>>', value);
           message += value;
           mainIpcService.postMessage(event.from, CHAT_EVENT.SENDING_MESSAGE, {
             data: value

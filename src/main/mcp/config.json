@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "weather": {
+      "command": "node",
+      "args": ["/Users/tangzhicheng/development/demo/weather/build/index.js"]
+    }
+  }
+}

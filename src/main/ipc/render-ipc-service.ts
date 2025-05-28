@@ -9,8 +9,8 @@ import { IpcMessage } from './types';
  *  - 转发事件到渲染进程
  */
 export class RenderIpcService extends BaseIpcService {
-  constructor(processKey: string) {
-    super(processKey);
+  constructor(processKey: string, debug = false) {
+    super(processKey, debug);
     this.init();
   }
 

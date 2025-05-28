@@ -22,6 +22,8 @@ export class DatabaseService {
   constructor() {
     const userDataPath = app.getPath('userData');
     this.dbPath = path.join(userDataPath, 'db');
+    console.log('[DatabaseService] constructor >>>', this.dbPath);
+    this.init();
   }
 
   async init() {
