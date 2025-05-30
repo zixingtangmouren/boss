@@ -1,9 +1,25 @@
-import { Button, Input, Layout, Divider, Modal, Card } from 'antd';
-import { useChat } from '@renderer/hooks/useChat';
-import { useAgentsStore } from '@renderer/store/useAgentsStore';
-import { useEffect, useRef, useState } from 'react';
-import { useMcpService } from '@renderer/hooks/useMcpService';
 import { UsbOutlined } from '@ant-design/icons';
+import Editor, { loader } from '@monaco-editor/react';
+import { useChat } from '@renderer/hooks/useChat';
+import { useMcpService } from '@renderer/hooks/useMcpService';
+import { useAgentsStore } from '@renderer/store/useAgentsStore';
+import { Button, Card, Divider, Input, Layout, Modal } from 'antd';
+import { useEffect, useRef, useState } from 'react';
+
+import * as monaco from 'monaco-editor';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+
+self.MonacoEnvironment = {
+  getWorker() {
+    return new jsonWorker();
+  }
+};
+
+loader.config({ monaco });
+
+loader.init().then(() => {
+  console.log('monaco init success');
+});
 
 const { Content } = Layout;
 
@@ -11,11 +27,14 @@ export const MessageWindow = () => {
   const chatListRef = useRef<HTMLDivElement>(null);
 
   const { selectedAgent } = useAgentsStore();
+  const { setSelectedAgent } = useAgentsStore();
+  // const { agents, listLoading: agentListLoading, handleSelectAgent } = useAgents();
 
   const { chatMessages, chatInput, handleSendMessage, handleMessageChange } =
     useChat(selectedAgent);
 
-  const { mcpServices, listLoading, registerMcpServer } = useMcpService();
+  const { mcpServices, listLoading, addMcpLoading, registerMcpServer, handleEditorChange } =
+    useMcpService();
 
   // 新增：控制 Modal 显隐
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
@@ -25,16 +44,6 @@ export const MessageWindow = () => {
 
   // 新增：添加 MCP 服务 Modal 显隐
   const [isAddMcpModalOpen, setIsAddMcpModalOpen] = useState(false);
-
-  // 新增：表单数据
-  const [addMcpForm, setAddMcpForm] = useState({
-    mcpServerName: '',
-    command: '',
-    serverScriptPath: ''
-  });
-
-  // 新增：表单 loading
-  const [addMcpLoading, setAddMcpLoading] = useState(false);
 
   // 点击 agent 名称时弹窗
   const handleAgentNameClick = () => {
@@ -61,28 +70,31 @@ export const MessageWindow = () => {
     setIsAddMcpModalOpen(true);
   };
 
-  // 关闭添加 MCP 服务弹窗
-  const handleAddMcpModalClose = () => {
+  const handleMCPRegister = async () => {
+    await registerMcpServer();
     setIsAddMcpModalOpen(false);
-    setAddMcpForm({ mcpServerName: '', command: '', serverScriptPath: '' });
   };
 
-  // 表单输入变更
-  const handleAddMcpFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAddMcpForm({ ...addMcpForm, [e.target.name]: e.target.value });
+  // 绑定 MCP 服务
+  const handleBindMcpService = async (mcpServerId: string) => {
+    if (!selectedAgent) return;
+    const newIds = Array.from(new Set([...(selectedAgent.mcpServerIds || []), mcpServerId]));
+    const updateData = { id: selectedAgent.id, mcpServerIds: newIds };
+    await window.api.agentsService.updateAgent(updateData);
+    // 刷新 selectedAgent
+    const updated = { ...selectedAgent, mcpServerIds: newIds };
+    setSelectedAgent(updated);
   };
 
-  // 提交表单
-  const handleAddMcpSubmit = async () => {
-    if (!addMcpForm.mcpServerName || !addMcpForm.command || !addMcpForm.serverScriptPath) return;
-    setAddMcpLoading(true);
-    await registerMcpServer(
-      addMcpForm.mcpServerName,
-      addMcpForm.command,
-      addMcpForm.serverScriptPath
-    );
-    setAddMcpLoading(false);
-    handleAddMcpModalClose();
+  // 解绑 MCP 服务
+  const handleUnbindMcpService = async (mcpServerId: string) => {
+    if (!selectedAgent) return;
+    const newIds = (selectedAgent.mcpServerIds || []).filter((id) => id !== mcpServerId);
+    const updateData = { id: selectedAgent.id, mcpServerIds: newIds };
+    await window.api.agentsService.updateAgent(updateData);
+    // 刷新 selectedAgent
+    const updated = { ...selectedAgent, mcpServerIds: newIds };
+    setSelectedAgent(updated);
   };
 
   useEffect(() => {
@@ -156,6 +168,8 @@ export const MessageWindow = () => {
                       padding: '8px 16px',
                       maxWidth: 360,
                       wordBreak: 'break-all',
+                      whiteSpace: 'pre-wrap',
+                      userSelect: 'text',
                       boxShadow: msg.role === 'user' ? '0 2px 8px #1677ff22' : '0 1px 3px #0001'
                     }}
                   >
@@ -230,74 +244,81 @@ export const MessageWindow = () => {
         onCancel={handleMcpModalClose}
         footer={null}
       >
+        <Button size="small" onClick={handleAddMcpClick}>
+          添加配置
+        </Button>
         {listLoading ? (
           <div>加载中...</div>
         ) : (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 8 }}>
             {mcpServices && mcpServices.length > 0 ? (
               <Card title="已注册 MCP 服务列表" style={{ marginBottom: 16 }}>
                 <ul style={{ paddingLeft: 0 }}>
-                  {mcpServices.map((item) => (
-                    <li key={item.mcpServerName} style={{ marginBottom: 8, listStyle: 'none' }}>
-                      <b>{item.mcpServerName}</b>：
-                      <span style={{ color: item.status === 'connected' ? 'green' : 'red' }}>
-                        {item.status === 'connected' ? '已连接' : '未连接'}
-                      </span>
-                    </li>
-                  ))}
+                  {mcpServices.map((item) => {
+                    const isConnected = item.status === 'connected';
+                    const isBound = selectedAgent?.mcpServerIds?.includes(item.mcpServerId);
+                    return (
+                      <li
+                        key={item.mcpServerId}
+                        style={{
+                          marginBottom: 8,
+                          listStyle: 'none',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <b style={{ marginRight: 8 }}>{item.mcpServerName}</b>
+                        <span style={{ color: isConnected ? 'green' : 'red', marginRight: 16 }}>
+                          {isConnected ? '已连接' : '未连接'}
+                        </span>
+                        <Button
+                          size="small"
+                          type={isBound ? 'default' : 'primary'}
+                          onClick={() =>
+                            isBound
+                              ? handleUnbindMcpService(item.mcpServerId)
+                              : handleBindMcpService(item.mcpServerId)
+                          }
+                          style={{ marginLeft: 8 }}
+                          disabled={!selectedAgent}
+                        >
+                          {isBound ? '解绑' : '绑定'}
+                        </Button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </Card>
             ) : (
-              <div>
+              <div onClick={handleAddMcpClick}>
                 <div>暂无 MCP 服务</div>
               </div>
             )}
           </div>
         )}
-        <Button size="small" onClick={handleAddMcpClick}>
-          添加 MCP 服务
-        </Button>
       </Modal>
 
       {/* 添加 MCP 服务 Modal */}
       <Modal
         title="添加 MCP 服务"
         open={isAddMcpModalOpen}
-        onCancel={handleAddMcpModalClose}
-        onOk={handleAddMcpSubmit}
+        onCancel={() => setIsAddMcpModalOpen(false)}
+        onOk={handleMCPRegister}
         confirmLoading={addMcpLoading}
         okText="提交"
         cancelText="取消"
         destroyOnClose
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <b>MCP 服务名称：</b>
-            <Input
-              name="mcpServerName"
-              value={addMcpForm.mcpServerName}
-              onChange={handleAddMcpFormChange}
-              placeholder="请输入 MCP 服务名称"
-            />
-          </div>
-          <div>
-            <b>Command：</b>
-            <Input
-              name="command"
-              value={addMcpForm.command}
-              onChange={handleAddMcpFormChange}
-              placeholder="请输入启动命令"
-            />
-          </div>
-          <div>
-            <b>Server Script 路径：</b>
-            <Input
-              name="serverScriptPath"
-              value={addMcpForm.serverScriptPath}
-              onChange={handleAddMcpFormChange}
-              placeholder="请输入 server script 路径"
-            />
-          </div>
+          <Editor
+            height={300}
+            language="json"
+            onMount={(editor) => {
+              console.log('editor >>>', editor);
+            }}
+            onChange={handleEditorChange}
+            defaultValue="{}"
+          />
         </div>
       </Modal>
     </Content>

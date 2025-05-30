@@ -1,8 +1,8 @@
 import { MainIpcService } from '../ipc/main-ipc-service';
+import { MemonyService } from '../memony/memony.service';
 import { ChatService } from './chat.service';
 import { ChatDto } from './dto/chat.dto';
 import { CHAT_EVENT } from './events';
-import { MemonyService } from '../memony/memony.service';
 
 export class ChatController {
   private mainIpcService: MainIpcService;

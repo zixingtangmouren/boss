@@ -1,5 +1,5 @@
-import { app } from 'electron';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
+import { app } from 'electron';
 import { setup } from './setup';
 
 app.whenReady().then(() => {

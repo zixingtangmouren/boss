@@ -23,17 +23,23 @@
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
     "@anthropic-ai/sdk": "^0.52.0",
+    "@dmitryrechkin/json-schema-to-zod": "^1.0.1",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@langchain/community": "^0.3.44",
     "@langchain/core": "^0.3.57",
+    "@langchain/deepseek": "^0.0.1",
+    "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.5.11",
     "@modelcontextprotocol/sdk": "^1.12.0",
+    "@monaco-editor/react": "^4.7.0",
     "ahooks": "^3.8.5",
     "antd": "^5.25.2",
     "electron-updater": "^6.3.9",
     "langchain": "^0.3.27",
+    "monaco-editor": "^0.52.2",
     "uuid": "^11.1.0",
+    "z": "^1.0.9",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

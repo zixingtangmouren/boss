@@ -1,17 +1,18 @@
+import { ChatDeepSeek } from '@langchain/deepseek';
+import { ChatOllama } from '@langchain/ollama';
+import { ChatOpenAI } from '@langchain/openai';
 import { DatabaseService } from '../database/database.service';
-import { ModelEntity } from './entites/model.entity';
-import { CreateModelDto } from './dto/create-model.dto';
 import { TableManager } from '../database/table-manager';
+import { CreateModelDto } from './dto/create-model.dto';
 import { DeleteModelDto } from './dto/delete-model.dto';
 import { UpdateModelDto } from './dto/update-model.dto';
-import { ChatOpenAI } from '@langchain/openai';
-import { Ollama } from '@langchain/community/llms/ollama';
+import { ModelEntity } from './entites/model.entity';
 
 export class ModelsService {
   private databaseService: DatabaseService;
   private table: TableManager<ModelEntity>;
   private models: ModelEntity[] = [];
-  private modelInstances: Map<string, ChatOpenAI | Ollama> = new Map();
+  private modelInstances: Map<string, ChatOpenAI | ChatOllama | ChatDeepSeek> = new Map();
 
   constructor(databaseService: DatabaseService) {
     this.databaseService = databaseService;
@@ -57,19 +58,19 @@ export class ModelsService {
         baseURL: model.baseUrl
       }
     });
-    let modelInstance: ChatOpenAI | Ollama;
+    let modelInstance: ChatDeepSeek | ChatOllama;
     if (model.modelName.toLocaleLowerCase().includes('llama')) {
       console.log('create ollama model instance >>>');
-      modelInstance = new Ollama({
+      modelInstance = new ChatOllama({
         model: model.modelName,
         baseUrl: model.baseUrl
       });
     } else {
       console.log('create chatopenai model instance >>>');
-      modelInstance = new ChatOpenAI({
+      modelInstance = new ChatDeepSeek({
         model: model.modelName,
+        apiKey: model.apiKey,
         configuration: {
-          apiKey: model.apiKey,
           baseURL: model.baseUrl
         }
       });

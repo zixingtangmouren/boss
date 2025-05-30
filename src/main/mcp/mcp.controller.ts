@@ -1,7 +1,7 @@
-import { MCP_EVENT } from './events';
-import { McpService } from './mcp.service';
 import { MainIpcService } from '../ipc';
 import { RegisterMcpServerDto } from './dto/register-mcp-server.dto';
+import { MCP_EVENT } from './events';
+import { McpService } from './mcp.service';
 
 export class McpController {
   private mcpService: McpService;
@@ -21,8 +21,7 @@ export class McpController {
       try {
         const mcpServer = await this.mcpService.registerMcpServer(data);
         if (mcpServer) {
-          await this.mcpService.connectToServer(mcpServer);
-          success = true;
+          success = await this.mcpService.connectToServer(mcpServer);
         }
       } catch (error) {
         console.error(error);

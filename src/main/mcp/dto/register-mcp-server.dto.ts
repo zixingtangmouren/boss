@@ -1,3 +1,6 @@
 import { McpEntity } from '../entites/mcp.entity';
 
-export type RegisterMcpServerDto = Omit<McpEntity, 'id' | 'createdAt' | 'updatedAt'>;
+export type RegisterMcpServerDto = Record<
+  string,
+  Omit<McpEntity, 'id' | 'createdAt' | 'updatedAt'>
+>;

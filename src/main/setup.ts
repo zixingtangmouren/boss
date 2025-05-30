@@ -1,11 +1,11 @@
-import { WindowsModule } from './windows/window.module';
-import { MainIpcService } from './ipc';
-import { DatabaseModule } from './database/database.module';
-import { ModelsModule } from './models/models.module';
 import { AgentsModule } from './agents/agents.module';
 import { ChatModule } from './chat/chat.module';
-import { MemonyModule } from './memony/memony.module';
+import { DatabaseModule } from './database/database.module';
+import { MainIpcService } from './ipc';
 import { McpModule } from './mcp/mcp.module';
+import { MemonyModule } from './memony/memony.module';
+import { ModelsModule } from './models/models.module';
+import { WindowsModule } from './windows/window.module';
 
 export async function setup() {
   const start = Date.now();
